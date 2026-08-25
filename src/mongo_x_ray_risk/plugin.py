@@ -13,7 +13,12 @@ from pathlib import Path
 
 from mongo_x_ray.plugin import Plugin
 
-from mongo_x_ray_risk import clear_risks, ingest_risks, load_risks_from_csv
+from mongo_x_ray_risk import (
+    clear_risks,
+    find_risks_by_name,
+    ingest_risks,
+    load_risks_from_csv,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -85,4 +90,48 @@ Examples:
             logger.info("Cleared the existing risk register")
         count = ingest_risks(risks)
         logger.info("Ingested %d risks into the risk register", count)
+        return 0
+
+
+class SearchPlugin(Plugin):
+    name = "search"
+    distribution = "mongo-x-ray-risk"
+    help = "Search the risk register for risks by name"
+    description = """
+Search the risk register for risks whose Name contains the given string
+(case-insensitive substring match). Use it to check whether a newly
+suggested risk is already known before adding it to the register.
+
+For every matching risk the Name and Risk description are printed.
+
+Exits 0 when at least one risk matches, 1 when nothing matches (so callers
+can tell "already known" from "new risk").
+"""
+    epilog = """
+Examples:
+  x-ray search "Replication Lag"
+  x-ray search replication
+"""
+
+    def add_arguments(self, parser):
+        parser.add_argument("string", help="Risk name (or part of one) to search for.")
+
+    def run(self, args) -> int:
+        """Search the register by risk name and print matching risks."""
+        query = (args.string or "").strip()
+        if not query:
+            logger.error("No search string given. Use 'x-ray search <string>'.")
+            return 1
+        try:
+            matches = find_risks_by_name(query)
+        except Exception as exc:
+            logger.error("Failed to search the risk register: %s", exc)
+            return 1
+        if not matches:
+            logger.info("No risks found matching %r", query)
+            return 1
+        for risk in matches:
+            print(f"Name: {risk['name']}")
+            print(f"Risk description: {risk['description']}")
+            print()
         return 0

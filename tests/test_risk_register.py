@@ -121,6 +121,80 @@ def test_enrich_test_results_matches_by_title(monkeypatch):
     assert captured == {"title": "Replication Lag"}
 
 
+class _FakeNameCollection:
+    """Minimal stand-in for a Chroma collection of risk names."""
+
+    def __init__(self, metadatas):
+        self._metadatas = metadatas
+
+    def get(self, include=None):
+        return {"ids": [m["id"] for m in self._metadatas], "metadatas": self._metadatas}
+
+
+def _install_fake_collection(monkeypatch, metadatas):
+    monkeypatch.setattr(db, "_collection", lambda name: _FakeNameCollection(metadatas))
+
+
+def test_find_risks_by_name_matches_substring_case_insensitive(monkeypatch):
+    _install_fake_collection(
+        monkeypatch,
+        [
+            {
+                "id": "R1",
+                "risk_level": "High",
+                "impact": "Medium",
+                "name": "Replication Lag",
+                "description": "oplog falls behind",
+            },
+            {
+                "id": "R2",
+                "risk_level": "Medium",
+                "impact": "Low",
+                "name": "Missing Index",
+                "description": "no matching index",
+            },
+        ],
+    )
+    hits = db.find_risks_by_name("replication")
+    assert [h["id"] for h in hits] == ["R1"]
+    assert hits[0]["name"] == "Replication Lag"
+    assert hits[0]["description"] == "oplog falls behind"
+
+
+def test_find_risks_by_name_returns_all_matching(monkeypatch):
+    _install_fake_collection(
+        monkeypatch,
+        [
+            {"id": "R1", "risk_level": "High", "impact": "Medium", "name": "Replication Lag", "description": "a"},
+            {"id": "R2", "risk_level": "Medium", "impact": "Low", "name": "Index on Replication", "description": "b"},
+            {"id": "R3", "risk_level": "Low", "impact": "Low", "name": "Backup Failure", "description": "c"},
+        ],
+    )
+    hits = db.find_risks_by_name("replication")
+    assert [h["id"] for h in hits] == ["R1", "R2"]
+
+
+def test_find_risks_by_name_no_match_returns_empty_list(monkeypatch):
+    _install_fake_collection(
+        monkeypatch,
+        [
+            {
+                "id": "R1",
+                "risk_level": "High",
+                "impact": "Medium",
+                "name": "Replication Lag",
+                "description": "oplog falls behind",
+            }
+        ],
+    )
+    assert db.find_risks_by_name("Unrelated Topic XYZ") == []
+
+
+def test_find_risks_by_name_empty_query_returns_empty_list(monkeypatch):
+    _install_fake_collection(monkeypatch, [])
+    assert db.find_risks_by_name("   ") == []
+
+
 @pytest.mark.integration
 def test_ingest_and_two_stage_search(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "get_db_path", lambda: tmp_path)

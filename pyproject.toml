@@ -15,6 +15,7 @@ dependencies = [
 
 [project.entry-points."mongo_x_ray.plugins"]
 ingest = "mongo_x_ray_risk.plugin:IngestPlugin"
+search = "mongo_x_ray_risk.plugin:SearchPlugin"
 
 [tool.setuptools.packages.find]
 where = ["src"]

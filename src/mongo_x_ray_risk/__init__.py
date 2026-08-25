@@ -10,6 +10,7 @@ module's item types.
 from mongo_x_ray_risk.db import (
     clear_risks,
     enrich_test_results,
+    find_risks_by_name,
     has_risks,
     ingest_risks,
     match_risk,
@@ -22,6 +23,7 @@ __all__ = [
     "load_risks_from_csv",
     "ingest_risks",
     "search_risks",
+    "find_risks_by_name",
     "clear_risks",
     "match_risk",
     "enrich_test_results",

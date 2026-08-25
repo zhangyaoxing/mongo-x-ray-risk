@@ -117,6 +117,43 @@ def search_risks(
     return entries
 
 
+def find_risks_by_name(query: str) -> list[dict]:
+    """Return risks whose ``Name`` contains *query* (case-insensitive).
+
+    Unlike :func:`search_risks` (vector similarity), this is a deterministic
+    substring match on the risk ``Name`` field — the right tool for checking
+    whether a proposed new risk name already exists in the register.
+
+    Args:
+        query: The name fragment to search for. Leading/trailing whitespace
+            is ignored; an empty query matches nothing.
+
+    Returns:
+        A list of dicts with keys: id, risk_level, impact, name, description.
+        Matches are returned in insertion order; no ``distance`` is included.
+    """
+    needle = query.strip().lower()
+    if not needle:
+        return []
+    col = _collection(CHROMA_COLLECTION)
+    got = col.get(include=["metadatas"])
+    entries: list[dict] = []
+    for doc_id, meta in zip(got["ids"], got["metadatas"] or []):
+        meta = meta or {}
+        name = meta.get("name", "")
+        if needle in name.lower():
+            entries.append(
+                {
+                    "id": meta.get("id", doc_id),
+                    "risk_level": meta.get("risk_level", ""),
+                    "impact": meta.get("impact", ""),
+                    "name": name,
+                    "description": meta.get("description", ""),
+                }
+            )
+    return entries
+
+
 def clear_risks() -> None:
     """Delete all documents from all risk collections."""
     for collection_name in (CHROMA_COLLECTION, CHROMA_COLLECTION_DESCRIPTION):

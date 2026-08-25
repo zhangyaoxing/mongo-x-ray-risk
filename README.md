@@ -5,9 +5,10 @@
 Known-risks knowledge base for [x-ray](https://github.com/mongodb-ps/ce-mongo-x-ray): a ChromaDB-backed
 vector search that matches analysis findings against known MongoDB risks.
 
-This is an optional plugin: it ships the `ingest` command to load the risk register, and the
-analysis plugins (healthcheck, log, gmd) detect it at runtime — when it is installed, their
-reports are enriched with matched risks; when it is missing, the enrichment is silently skipped.
+This is an optional plugin: it ships the `ingest` command to load the risk register, the `search`
+command to look risks up by name, and the analysis plugins (healthcheck, log, gmd) detect it at
+runtime — when it is installed, their reports are enriched with matched risks; when it is missing,
+the enrichment is silently skipped.
 
 ## Install
 
@@ -25,6 +26,15 @@ x-ray ingest risk_register.csv
 x-ray ingest --clear risk_register.csv
 # clear the register without ingesting (no CSV needed)
 x-ray ingest --clear
+```
+
+Check whether a risk is already known by searching the `Name` column
+(case-insensitive substring match). Prints the `Name` and `Risk description`
+of every matching risk; exits 0 when something matches, 1 when nothing does:
+
+```bash
+x-ray search "Replication Lag"
+x-ray search replication
 ```
 
 The CSV must have the columns `ID, Risk level, Impact, Name, Risk description`
