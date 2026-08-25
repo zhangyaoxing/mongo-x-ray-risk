@@ -6,7 +6,7 @@ from mongo_x_ray_risk.plugin import IngestPlugin
 
 
 def _args(**overrides) -> argparse.Namespace:
-    ns = argparse.Namespace(csv="", clear=False)
+    ns = argparse.Namespace(csv=None, clear=False)
     ns.__dict__.update(overrides)
     return ns
 
@@ -54,6 +54,21 @@ def test_run_clear_empties_register_first(monkeypatch, tmp_path):
 
     assert IngestPlugin().run(_args(csv=str(csv_path), clear=True)) == 0
     assert cleared == [True]
+
+
+def test_run_clear_without_csv_only_clears(monkeypatch):
+    cleared = []
+    ingest_called = []
+    monkeypatch.setattr("mongo_x_ray_risk.plugin.clear_risks", lambda: cleared.append(True))
+    monkeypatch.setattr("mongo_x_ray_risk.plugin.ingest_risks", lambda risks: ingest_called.append(risks))
+
+    assert IngestPlugin().run(_args(clear=True)) == 0
+    assert cleared == [True]
+    assert ingest_called == []
+
+
+def test_run_without_csv_or_clear_returns_error():
+    assert IngestPlugin().run(_args()) == 1
 
 
 def test_run_missing_csv_returns_error(tmp_path):

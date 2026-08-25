@@ -23,6 +23,8 @@ Load a risk register CSV into the ChromaDB knowledge base:
 x-ray ingest risk_register.csv
 # start from an empty register, then ingest
 x-ray ingest --clear risk_register.csv
+# clear the register without ingesting (no CSV needed)
+x-ray ingest --clear
 ```
 
 The CSV must have the columns `ID, Risk level, Impact, Name, Risk description`

@@ -34,15 +34,18 @@ Header names are matched case-insensitively; any other columns (e.g.
 Other Notes) are ignored. Rows without an ID or a Name are skipped. Existing
 entries with the same ID are replaced; use --clear to start from an empty
 register.
+
+Run 'x-ray ingest --clear' alone to clear the register without a CSV.
 """
     epilog = """
 Examples:
   x-ray ingest risk_register.csv
-  x-ray ingest --clear risk_register.csv
+  x-ray ingest --clear risk_register.csv   # clear, then ingest
+  x-ray ingest --clear                      # clear only
 """
 
     def add_arguments(self, parser):
-        parser.add_argument("csv", help="Path to the risk register CSV file.")
+        parser.add_argument("csv", nargs="?", help="Path to the risk register CSV file.")
         parser.add_argument(
             "--clear",
             help="Clear the existing risk register before ingesting.",
@@ -51,7 +54,17 @@ Examples:
         )
 
     def run(self, args) -> int:
-        """Ingest the risk register CSV and report how many risks were stored."""
+        """Clear the risk register and/or ingest a CSV, reporting what was done."""
+        if not args.csv:
+            if args.clear:
+                clear_risks()
+                logger.info("Cleared the existing risk register")
+                return 0
+            logger.error(
+                "No CSV file given. Use 'x-ray ingest <csv>' to ingest, "
+                "or 'x-ray ingest --clear' to clear the register."
+            )
+            return 1
         csv_path = Path(args.csv)
         if not csv_path.is_file():
             logger.error("CSV file not found: %s", csv_path)
