@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install core dependency (mongo-x-ray)
+        run: pip install "mongo-x-ray @ git+https://github.com/mongodb-ps/ce-mongo-x-ray.git@v2.0.0-dev"
+
+      - name: Install this plugin
+        run: pip install -e .
+
+      - name: Install lint and test tools
+        run: pip install "ruff==0.16.1" pytest
+
+      - name: Lint (ruff check + format)
+        run: make lint PYTHON=python
+
+      - name: Unit tests
+        run: make unit-test PYTHON=python
