@@ -88,6 +88,21 @@ def test_match_risk_returns_none_when_both_stages_miss(monkeypatch):
     assert db.match_risk("Unrelated Topic") is None
 
 
+def test_has_risks_reflects_collection_count(monkeypatch):
+    monkeypatch.setattr(db, "_collection_count", lambda: 3)
+    assert db.has_risks() is True
+    monkeypatch.setattr(db, "_collection_count", lambda: 0)
+    assert db.has_risks() is False
+
+
+def test_has_risks_returns_false_when_chromadb_unavailable(monkeypatch):
+    def boom():
+        raise RuntimeError("chromadb unavailable")
+
+    monkeypatch.setattr(db, "_collection_count", boom)
+    assert db.has_risks() is False
+
+
 def test_enrich_test_results_matches_by_title(monkeypatch):
     monkeypatch.setattr(db, "_collection_count", lambda: 1)
     captured = {}

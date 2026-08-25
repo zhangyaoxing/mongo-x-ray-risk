@@ -133,6 +133,18 @@ def _collection_count() -> int:
     return col.count()
 
 
+def has_risks() -> bool:
+    """Return True if the risk register contains any ingested risks.
+
+    Never raises: a missing/corrupt ChromaDB or an empty register both mean
+    ``False``, so callers can decide whether to show risk-related UI.
+    """
+    try:
+        return _collection_count() > 0
+    except Exception:
+        return False
+
+
 def match_risk(category: str, max_distance: float = 0.9) -> Optional[dict]:
     """Find the closest matching risk for a given issue.
 
