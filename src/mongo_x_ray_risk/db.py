@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Mapping, Optional
 
-from mongo_x_ray_risk_register.shared import (
+from mongo_x_ray_risk.shared import (
     CHROMA_COLLECTION,
     CHROMA_COLLECTION_DESCRIPTION,
     Risk,

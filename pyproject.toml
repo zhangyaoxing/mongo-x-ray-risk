@@ -3,7 +3,7 @@ requires = ["setuptools==83.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mongo-x-ray-risk-register"
+name = "mongo-x-ray-risk"
 version = "2.0.0"
 description = "Known-risks knowledge base (ChromaDB vector search) for x-ray"
 readme = "README.md"
@@ -15,7 +15,7 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["mongo_x_ray_risk_register*"]
+include = ["mongo_x_ray_risk*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

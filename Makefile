@@ -20,7 +20,7 @@ lint:
 	@echo "\033[32m✓ No lint errors found!\033[0m"
 
 help:
-	@echo "mongo-x-ray-risk-register Makefile"
+	@echo "mongo-x-ray-risk Makefile"
 	@echo ""
 	@echo "  make unit-test  - Run the unit tests"
 	@echo "  make test       - Alias for unit-test"

@@ -1,6 +1,6 @@
-# mongo-x-ray-risk-register
+# mongo-x-ray-risk
 
-[![CI](https://github.com/zhangyaoxing/mongo-x-ray-risk-register/actions/workflows/ci.yml/badge.svg)](https://github.com/zhangyaoxing/mongo-x-ray-risk-register/actions/workflows/ci.yml)
+[![CI](https://github.com/zhangyaoxing/mongo-x-ray-risk/actions/workflows/ci.yml/badge.svg)](https://github.com/zhangyaoxing/mongo-x-ray-risk/actions/workflows/ci.yml)
 
 Known-risks knowledge base for [x-ray](https://github.com/mongodb-ps/ce-mongo-x-ray): a ChromaDB-backed
 vector search that matches analysis findings against known MongoDB risks.
@@ -12,7 +12,7 @@ enriched with matched risks; when it is missing, the enrichment is silently skip
 ## Install
 
 ```bash
-pip install mongo-x-ray mongo-x-ray-risk-register
+pip install mongo-x-ray mongo-x-ray-risk
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ The plugin is used automatically by the other plugins once installed — no CLI 
 It exposes a small API for tooling:
 
 ```python
-from mongo_x_ray_risk_register import Risk, ingest_risks, match_risk, enrich_test_results
+from mongo_x_ray_risk import Risk, ingest_risks, match_risk, enrich_test_results
 ```
 
 ## Development
