@@ -5,9 +5,9 @@
 Known-risks knowledge base for [x-ray](https://github.com/mongodb-ps/ce-mongo-x-ray): a ChromaDB-backed
 vector search that matches analysis findings against known MongoDB risks.
 
-This is an optional library plugin (it registers no CLI command). The analysis plugins
-(healthcheck, log, gmd) detect it at runtime: when it is installed, their reports are
-enriched with matched risks; when it is missing, the enrichment is silently skipped.
+This is an optional plugin: it ships the `ingest` command to load the risk register, and the
+analysis plugins (healthcheck, log, gmd) detect it at runtime — when it is installed, their
+reports are enriched with matched risks; when it is missing, the enrichment is silently skipped.
 
 ## Install
 
@@ -17,11 +17,23 @@ pip install mongo-x-ray mongo-x-ray-risk
 
 ## Usage
 
-The plugin is used automatically by the other plugins once installed — no CLI flags needed.
-It exposes a small API for tooling:
+Load a risk register CSV into the ChromaDB knowledge base:
+
+```bash
+x-ray ingest risk_register.csv
+# start from an empty register, then ingest
+x-ray ingest --clear risk_register.csv
+```
+
+The CSV must have the columns `ID, Risk Level, Impact, Name, Risk Description`
+(UTF-8, a BOM is tolerated). Rows without an ID or a Name are skipped; entries
+with an existing ID are replaced. The data is stored under `~/.x-ray/chroma`.
+
+Once ingested, the plugin is used automatically by the other plugins — no CLI
+flags needed. It also exposes a small API for tooling:
 
 ```python
-from mongo_x_ray_risk import Risk, ingest_risks, match_risk, enrich_test_results
+from mongo_x_ray_risk import Risk, load_risks_from_csv, ingest_risks, match_risk, enrich_test_results
 ```
 
 ## Development

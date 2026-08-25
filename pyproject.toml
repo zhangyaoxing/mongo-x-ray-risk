@@ -13,6 +13,9 @@ dependencies = [
   "chromadb==1.5.9",
 ]
 
+[project.entry-points."mongo_x_ray.plugins"]
+ingest = "mongo_x_ray_risk.plugin:IngestPlugin"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["mongo_x_ray_risk*"]
