@@ -25,9 +25,11 @@ x-ray ingest risk_register.csv
 x-ray ingest --clear risk_register.csv
 ```
 
-The CSV must have the columns `ID, Risk Level, Impact, Name, Risk Description`
-(UTF-8, a BOM is tolerated). Rows without an ID or a Name are skipped; entries
-with an existing ID are replaced. The data is stored under `~/.x-ray/chroma`.
+The CSV must have the columns `ID, Risk level, Impact, Name, Risk description`
+(UTF-8, a BOM is tolerated; header names are matched case-insensitively). Any
+other columns, such as `Other Notes`, are ignored. Rows without an ID or a
+Name are skipped; entries with an existing ID are replaced. The data is
+stored under `~/.x-ray/chroma`.
 
 Once ingested, the plugin is used automatically by the other plugins — no CLI
 flags needed. It also exposes a small API for tooling:

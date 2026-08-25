@@ -142,7 +142,8 @@ def match_risk(category: str, max_distance: float = 0.9) -> Optional[dict]:
        ``category`` against the risk ``Risk Description`` field.
 
     Args:
-        category: The issue category/title to match against risk names.
+        category: The issue category to match — the ``Alert Category``
+            column in the reports (each item's ``title``).
         max_distance: Maximum vector distance for a match to be considered
             valid. Lower values mean closer matches. Default 0.9.
 
@@ -163,9 +164,10 @@ def match_risk(category: str, max_distance: float = 0.9) -> Optional[dict]:
 def enrich_test_results(test_results: list[dict], max_distance: float = 0.9) -> int:
     """Enrich a list of test results with matched risk information.
 
-    Each result dict that has a ``title`` key will be matched against the
-    risk register using the two-stage fallback search. If a match is found,
-    a ``matched_risk`` key is added.
+    Each result dict that has a ``title`` key (the ``Alert Category`` column
+    in the reports) will be matched against the risk register's ``Name``
+    field using the two-stage fallback search. If a match is found, a
+    ``matched_risk`` key is added.
 
     Args:
         test_results: List of test result dicts (each has a ``title`` key).

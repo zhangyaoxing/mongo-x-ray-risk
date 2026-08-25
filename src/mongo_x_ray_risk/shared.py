@@ -25,22 +25,31 @@ class Risk:
     description: str
 
 
+def _normalize_header(header: str) -> str:
+    """Normalize a CSV header for case/whitespace-insensitive matching."""
+    return (header or "").strip().lower()
+
+
 def load_risks_from_csv(csv_path: Path) -> list[Risk]:
     """Parse a CSV risk register file.
 
-    Expected columns:
-        ID, Risk Level, Impact, Name, Risk Description
+    Used columns (matched case-insensitively; any other columns, e.g.
+    ``Other Notes``, are ignored):
+        ID, Risk level, Impact, Name, Risk description
+
+    Rows without an ID or a Name are skipped.
     """
     risks: list[Risk] = []
     with open(csv_path, newline="", encoding="utf-8-sig") as fh:
         reader = csv.DictReader(fh)
+        headers = {_normalize_header(h): h for h in (reader.fieldnames or [])}
         for row in reader:
             risk = Risk(
-                id=row.get("ID", "").strip(),
-                risk_level=row.get("Risk Level", "").strip(),
-                impact=row.get("Impact", "").strip(),
-                name=row.get("Name", "").strip(),
-                description=row.get("Risk Description", "").strip(),
+                id=(row.get(headers.get("id", "")) or "").strip(),
+                risk_level=(row.get(headers.get("risk level", "")) or "").strip(),
+                impact=(row.get(headers.get("impact", "")) or "").strip(),
+                name=(row.get(headers.get("name", "")) or "").strip(),
+                description=(row.get(headers.get("risk description", "")) or "").strip(),
             )
             if risk.id and risk.name:
                 risks.append(risk)

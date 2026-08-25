@@ -15,17 +15,18 @@ def test_plugin_metadata():
     assert IngestPlugin.name == "ingest"
     assert IngestPlugin.distribution == "mongo-x-ray-risk"
     assert "CSV" in IngestPlugin.help
-    assert "ID, Risk Level, Impact, Name, Risk Description" in IngestPlugin.description
+    assert "ID, Risk level, Impact, Name, Risk description" in IngestPlugin.description
+    assert "Other Notes" in IngestPlugin.description
     assert "x-ray ingest risk_register.csv" in IngestPlugin.epilog
 
 
 def test_run_ingests_csv_rows(monkeypatch, tmp_path):
     csv_path = tmp_path / "risks.csv"
     csv_path.write_text(
-        "ID,Risk Level,Impact,Name,Risk Description\n"
-        "R1,High,Medium,Replication Lag,oplog falls behind\n"
-        "R2,Medium,Low,Missing Index,no matching index\n"
-        ",,Low,No Id Here,skipped\n",
+        "ID,Risk level,Impact,Name,Risk description,Other Notes\n"
+        "R1,High,Medium,Replication Lag,oplog falls behind,internal note\n"
+        "R2,Medium,Low,Missing Index,no matching index,\n"
+        ",,Low,No Id Here,skipped,note\n",
         encoding="utf-8",
     )
     seen = {}
@@ -46,7 +47,7 @@ def test_run_ingests_csv_rows(monkeypatch, tmp_path):
 
 def test_run_clear_empties_register_first(monkeypatch, tmp_path):
     csv_path = tmp_path / "risks.csv"
-    csv_path.write_text("ID,Risk Level,Impact,Name,Risk Description\nR1,Low,Low,One Risk,x\n", encoding="utf-8")
+    csv_path.write_text("ID,Risk level,Impact,Name,Risk description\nR1,Low,Low,One Risk,x\n", encoding="utf-8")
     cleared = []
     monkeypatch.setattr("mongo_x_ray_risk.plugin.clear_risks", lambda: cleared.append(True))
     monkeypatch.setattr("mongo_x_ray_risk.plugin.ingest_risks", lambda risks: len(risks))
@@ -61,7 +62,7 @@ def test_run_missing_csv_returns_error(tmp_path):
 
 def test_run_csv_without_valid_rows_returns_error(tmp_path):
     csv_path = tmp_path / "empty.csv"
-    csv_path.write_text("ID,Risk Level,Impact,Name,Risk Description\n", encoding="utf-8")
+    csv_path.write_text("ID,Risk level,Impact,Name,Risk description\n", encoding="utf-8")
     assert IngestPlugin().run(_args(csv=str(csv_path))) == 1
 
 

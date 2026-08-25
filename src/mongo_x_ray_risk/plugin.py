@@ -28,10 +28,12 @@ by the analysis plugins (healthcheck, log, gmd) to match findings against
 known risks.
 
 The CSV must have the following columns:
-  ID, Risk Level, Impact, Name, Risk Description
+  ID, Risk level, Impact, Name, Risk description
 
-Rows without an ID or a Name are skipped. Existing entries with the same ID
-are replaced; use --clear to start from an empty register.
+Header names are matched case-insensitively; any other columns (e.g.
+Other Notes) are ignored. Rows without an ID or a Name are skipped. Existing
+entries with the same ID are replaced; use --clear to start from an empty
+register.
 """
     epilog = """
 Examples:
@@ -61,7 +63,7 @@ Examples:
             return 1
         if not risks:
             logger.error(
-                "No valid risk rows found in %s (expected columns: ID, Risk Level, Impact, Name, Risk Description)",
+                "No valid risk rows found in %s (expected columns: ID, Risk level, Impact, Name, Risk description)",
                 csv_path,
             )
             return 1
