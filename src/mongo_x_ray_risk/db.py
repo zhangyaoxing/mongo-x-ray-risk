@@ -21,9 +21,18 @@ _logger = logging.getLogger(__name__)
 def _collection(collection_name: str = CHROMA_COLLECTION):
     """Return an initialized ChromaDB collection (lazy singleton)."""
     # Import chromadb lazily so importing this module stays cheap and the risk
-    # register remains an optional best-effort enrichment.
-    import chromadb
-    from chromadb.config import Settings
+    # register remains an optional best-effort enrichment. ChromaDB is not
+    # bundled into the frozen x-ray binary, so a missing import surfaces as a
+    # clear error instead of a raw traceback.
+    try:
+        import chromadb
+        from chromadb.config import Settings
+    except ImportError as exc:
+        raise RuntimeError(
+            "ChromaDB is not available in this build. Install the "
+            "'mongo-x-ray-risk' pip package (which depends on chromadb) "
+            "to use the risk register."
+        ) from exc
 
     db_path = get_db_path() / "chroma"
     db_path.mkdir(parents=True, exist_ok=True)
@@ -140,15 +149,15 @@ def find_risks_by_name(query: str) -> list[dict]:
     entries: list[dict] = []
     for doc_id, meta in zip(got["ids"], got["metadatas"] or []):
         meta = meta or {}
-        name = meta.get("name", "")
+        name = str(meta.get("name", "") or "")
         if needle in name.lower():
             entries.append(
                 {
-                    "id": meta.get("id", doc_id),
-                    "risk_level": meta.get("risk_level", ""),
-                    "impact": meta.get("impact", ""),
+                    "id": str(meta.get("id", doc_id)),
+                    "risk_level": str(meta.get("risk_level", "") or ""),
+                    "impact": str(meta.get("impact", "") or ""),
                     "name": name,
-                    "description": meta.get("description", ""),
+                    "description": str(meta.get("description", "") or ""),
                 }
             )
     return entries

@@ -62,7 +62,11 @@ Examples:
         """Clear the risk register and/or ingest a CSV, reporting what was done."""
         if not args.csv:
             if args.clear:
-                clear_risks()
+                try:
+                    clear_risks()
+                except Exception as exc:
+                    logger.error("Risk register unavailable: %s", exc)
+                    return 1
                 logger.info("Cleared the existing risk register")
                 return 0
             logger.error(
@@ -85,12 +89,16 @@ Examples:
                 csv_path,
             )
             return 1
-        if args.clear:
-            clear_risks()
-            logger.info("Cleared the existing risk register")
-        count = ingest_risks(risks)
-        logger.info("Ingested %d risks into the risk register", count)
-        return 0
+        try:
+            if args.clear:
+                clear_risks()
+                logger.info("Cleared the existing risk register")
+            count = ingest_risks(risks)
+            logger.info("Ingested %d risks into the risk register", count)
+            return 0
+        except Exception as exc:
+            logger.error("Risk register unavailable: %s", exc)
+            return 1
 
 
 class SearchPlugin(Plugin):
