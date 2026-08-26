@@ -50,7 +50,7 @@ def test_run_clear_empties_register_first(monkeypatch, tmp_path):
     csv_path.write_text("ID,Risk level,Impact,Name,Risk description\nR1,Low,Low,One Risk,x\n", encoding="utf-8")
     cleared = []
     monkeypatch.setattr("mongo_x_ray_risk.plugin.clear_risks", lambda: cleared.append(True))
-    monkeypatch.setattr("mongo_x_ray_risk.plugin.ingest_risks", lambda risks: len(risks))
+    monkeypatch.setattr("mongo_x_ray_risk.plugin.ingest_risks", len)
 
     assert IngestPlugin().run(_args(csv=str(csv_path), clear=True)) == 0
     assert cleared == [True]
