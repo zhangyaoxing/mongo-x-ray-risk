@@ -12,7 +12,6 @@ import logging
 from pathlib import Path
 
 from mongo_x_ray.plugin import Plugin
-
 from mongo_x_ray_risk import (
     clear_risks,
     find_risks_by_name,
