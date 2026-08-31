@@ -1,6 +1,7 @@
 # mongo-x-ray-risk
 
 [![CI](https://github.com/zhangyaoxing/mongo-x-ray-risk/actions/workflows/ci.yml/badge.svg)](https://github.com/zhangyaoxing/mongo-x-ray-risk/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/mongo-x-ray-risk.svg)](https://pypi.org/project/mongo-x-ray-risk/)
 
 Known-risks knowledge base for [x-ray](https://github.com/mongodb-ps/ce-mongo-x-ray): a ChromaDB-backed
 vector search that matches analysis findings against known MongoDB risks.
