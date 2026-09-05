@@ -13,6 +13,7 @@ ChromaDB-backed risk register with vector search.
 from __future__ import annotations
 
 import logging
+from collections import OrderedDict
 from typing import Any, Mapping, Optional
 
 from mongo_x_ray_risk.shared import (
@@ -26,6 +27,20 @@ from mongo_x_ray_risk.shared import (
 logging.getLogger("chromadb.telemetry").setLevel(logging.CRITICAL)
 
 _logger = logging.getLogger(__name__)
+
+# In-process cache of vector-search results, keyed by search term so repeated
+# lookups of the same alert title don't re-embed / re-query ChromaDB. Kept
+# small (bounded LRU) and invalidated whenever the register is mutated.
+_SEARCH_CACHE_SIZE = 512
+_search_cache: OrderedDict[tuple[str, int, str], tuple[dict, ...]] = OrderedDict()
+
+
+def _cache_search(key: tuple[str, int, str], entries: list[dict]) -> None:
+    """Store *entries* under *key*, evicting the least-recently-used entry."""
+    _search_cache[key] = tuple(entries)
+    _search_cache.move_to_end(key)
+    while len(_search_cache) > _SEARCH_CACHE_SIZE:
+        _search_cache.popitem(last=False)
 
 
 def _collection(collection_name: str = CHROMA_COLLECTION):
@@ -94,6 +109,7 @@ def ingest_risks(risks: list[Risk]) -> int:
     name_col.upsert(ids=name_ids, documents=name_documents, metadatas=name_metadatas)
     if desc_ids:
         desc_col.upsert(ids=desc_ids, documents=desc_documents, metadatas=desc_metadatas)
+    _search_cache.clear()
     _logger.info("Ingested %d risks into ChromaDB", len(risks))
     return len(risks)
 
@@ -105,6 +121,12 @@ def search_risks(
 ) -> list[dict]:
     """Vector search for risks matching the query text.
 
+    Results are cached in memory keyed by ``(query, n_results,
+    collection_name)``: repeating the same search term (e.g. the same alert
+    title across many findings) returns the cached result directly instead of
+    re-querying ChromaDB. The cache is cleared whenever the register changes
+    (ingest or clear), so results never go stale.
+
     Args:
         query: The text to search for.
         n_results: Maximum number of results to return.
@@ -115,10 +137,18 @@ def search_risks(
         A list of dicts with keys: id, risk_level, impact, name,
         description, distance.
     """
+    key = (query, n_results, collection_name)
+    cached = _search_cache.get(key)
+    if cached is not None:
+        _search_cache.move_to_end(key)
+        # Return copies so callers can't mutate the cached entries.
+        return [dict(entry) for entry in cached]
+
     col = _collection(collection_name)
     results = col.query(query_texts=[query], n_results=n_results)
     entries: list[dict] = []
     if not results["ids"] or not results["ids"][0]:
+        _cache_search(key, entries)
         return entries
     for i, doc_id in enumerate(results["ids"][0]):
         meta = results["metadatas"][0][i] if results["metadatas"] else {}
@@ -133,7 +163,9 @@ def search_risks(
                 "distance": distance,
             }
         )
-    return entries
+    _cache_search(key, entries)
+    # Return copies so callers can't mutate the cached entries.
+    return [dict(entry) for entry in entries]
 
 
 def find_risks_by_name(query: str) -> list[dict]:
@@ -181,6 +213,7 @@ def clear_risks() -> None:
         if ids:
             col.delete(ids=ids)
             _logger.info("Cleared %d risks from %s", len(ids), collection_name)
+    _search_cache.clear()
 
 
 def _collection_count() -> int:
