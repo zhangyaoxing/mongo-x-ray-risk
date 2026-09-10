@@ -32,7 +32,7 @@ jobs:
         run: python -m pip install --upgrade pip
 
       - name: Install core dependency (mongo-x-ray)
-        run: pip install "mongo-x-ray @ git+https://github.com/mongodb-ps/ce-mongo-x-ray.git@v2.0.0-dev"
+        run: pip install "mongo-x-ray @ git+https://github.com/mongodb-ps/ce-mongo-x-ray.git@main"
 
       - name: Install project
         run: pip install -e .
