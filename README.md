@@ -51,6 +51,33 @@ flags needed. It also exposes a small API for tooling:
 from mongo_x_ray_risk import Risk, load_risks_from_csv, ingest_risks, match_risk, enrich_test_results
 ```
 
+## Security notes
+
+Dependabot reports open advisories against the pinned `chromadb` version
+(2 critical, 2 high as of 1.5.9). They all affect the **Chroma HTTP server API**
+only:
+
+- CVE-2026-45829 / CVE-2026-45833 — code injection: an attacker posts a
+  malicious model repository with `trust_remote_code` set to true to the
+  `/api/v2/.../collections` endpoints of a running Chroma server.
+- CVE-2026-45830 / CVE-2026-45831 — a Chroma server lets authenticated users
+  read, write or delete data across tenants, databases and collections.
+
+This plugin never runs or connects to a Chroma server. It uses ChromaDB's
+in-process embedded client on a local path:
+
+```python
+chromadb.PersistentClient(path=~/.x-ray/chroma, settings=Settings(anonymized_telemetry=False))
+```
+
+It embeds with the default local embedding function (no remote model is
+downloaded) and accepts no remote Chroma endpoint, so neither the server API
+nor its authentication layer is reachable. The advisories were therefore
+dismissed on GitHub as "vulnerable code is not actually used". `chromadb==1.5.9`
+is also the newest release and no advisory lists a patched version yet, so this
+cannot be fixed by upgrading; the pin is revisited when a patched release
+appears.
+
 ## Development
 
 Requires Python 3.10+, MongoDB 5.0 or later, and the [mongo-x-ray](https://github.com/mongodb-ps/ce-mongo-x-ray) core package.
