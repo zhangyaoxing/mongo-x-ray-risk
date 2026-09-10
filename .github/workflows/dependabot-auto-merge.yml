@@ -14,16 +14,13 @@ jobs:
         if: github.actor == 'dependabot[bot]'
 
         steps:
-            - name: Check out code
-              uses: actions/checkout@v7
-
             - name: Fetch Dependabot metadata
               id: metadata
               uses: dependabot/fetch-metadata@v3
               with:
                   github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-            - name: Enable auto-merge for Dependabot PRs
+            - name: Enable auto-merge for patch and minor updates
               if: |
                   steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
                   steps.metadata.outputs.update-type == 'version-update:semver-minor'
@@ -33,10 +30,43 @@ jobs:
                   PR_URL: ${{github.event.pull_request.html_url}}
                   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-            - name: Comment on major version updates
-              if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+            # Major bumps of the CI actions and of the build/lint/test tooling are
+            # mechanical, so merge them as soon as every check is green. The job
+            # polls the checks itself because branches here have no required
+            # status checks, and `gh pr merge --auto` would merge immediately.
+            - name: Merge major updates of CI and tooling once checks pass
+              if: |
+                  steps.metadata.outputs.update-type == 'version-update:semver-major' &&
+                  (startsWith(github.event.pull_request.head.ref, 'dependabot/github_actions/') ||
+                   contains(fromJSON('["setuptools","wheel","ruff","pylint","pyright","pytest","pytest-cov","coverage","pluggy","iniconfig","tomli","types-Markdown"]'), steps.metadata.outputs.dependency-names))
               run: |
-                  gh pr comment "$PR_URL" --body "⚠️ This is a **major version update**. Please review carefully before merging."
+                  for attempt in $(seq 1 60); do
+                      states="$(gh pr checks "$PR_URL" --json state --jq '.[].state' 2>/dev/null | sort -u | tr '\n' ' ')"
+                      echo "attempt ${attempt}: checks=[${states}]"
+                      if [ -z "${states}" ] || echo "${states}" | grep -Eq 'PENDING|QUEUED|IN_PROGRESS|WAITING|EXPECTED'; then
+                          sleep 20
+                          continue
+                      fi
+                      if echo "${states}" | grep -Eq 'FAILURE|ERROR|CANCELLED|TIMED_OUT|ACTION_REQUIRED|STARTUP_FAILURE'; then
+                          echo "::error::Checks are not green - leaving the pull request open for review."
+                          exit 1
+                      fi
+                      gh pr merge --squash "$PR_URL"
+                      exit 0
+                  done
+                  echo "::error::Timed out waiting for checks - leaving the pull request open for review."
+                  exit 1
+              env:
+                  PR_URL: ${{github.event.pull_request.html_url}}
+                  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+            - name: Comment on major updates that need a human
+              if: |
+                  steps.metadata.outputs.update-type == 'version-update:semver-major' &&
+                  !(startsWith(github.event.pull_request.head.ref, 'dependabot/github_actions/') ||
+                    contains(fromJSON('["setuptools","wheel","ruff","pylint","pyright","pytest","pytest-cov","coverage","pluggy","iniconfig","tomli","types-Markdown"]'), steps.metadata.outputs.dependency-names))
+              run: |
+                  gh pr comment "$PR_URL" --body "⚠️ This is a **major version update** of a runtime dependency. Please review carefully before merging."
               env:
                   PR_URL: ${{github.event.pull_request.html_url}}
                   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
