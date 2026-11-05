@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mongo-x-ray-risk"
-version = "2.2.1"
+version = "2.1.1"
 description = "Known-risks knowledge base (ChromaDB vector search) for x-ray"
 readme = "README.md"
 requires-python = ">=3.10,<4"
