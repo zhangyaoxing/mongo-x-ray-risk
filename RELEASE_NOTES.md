@@ -1,5 +1,9 @@
 # mongo-x-ray-risk — Release Notes
 
+## 2.1.2
+
+Version alignment with the x-ray 2.1.2 release — no functional changes in this plugin.
+
 ## 2.1.1
 
 Dependency and automation release — the plugin's own behaviour is unchanged.
