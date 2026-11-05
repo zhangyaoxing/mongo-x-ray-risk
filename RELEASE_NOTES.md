@@ -1,5 +1,16 @@
 # mongo-x-ray-risk — Release Notes
 
+## 2.1.1
+
+Dependency and automation release — the plugin's own behaviour is unchanged.
+
+### Dependencies
+- Build: `setuptools` 84.0.0 → 84.2.1 ([`GHSA-xmj3-9gf7-h52w`](https://github.com/advisories/GHSA-xmj3-9gf7-h52w), low — Windows path escape via `namespace_packages.txt` during a legacy wheel install).
+
+### Automation
+- **Dependabot auto-merge repaired**: the workflow counted its own in-progress `auto-merge` check when waiting for "every check to pass", so it always timed out and updates stayed open. It now ignores its own check, retries a merge that lost a race with a sibling update, requests a rebase when the branch conflicts, and tolerates branches modified by hand.
+- Repository labels `dependencies`, `python` and `github-actions` added, so Dependabot can tag its pull requests.
+
 Known-risks knowledge base for x-ray: a ChromaDB-backed vector search that matches analysis findings against known MongoDB risks, with CLI commands to manage the register.
 
 ## v2.1.0
